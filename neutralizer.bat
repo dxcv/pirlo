@@ -1,0 +1,16 @@
+python app.py Neutralizer attack_diff %1 %2 %3
+python app.py Neutralizer attack_imbalance %1 %2 %3
+python app.py Neutralizer down_attack %1 %2 %3
+python app.py Neutralizer down_attack_on_down %1 %2 %3
+python app.py Neutralizer down_attack_ratio %1 %2 %3
+python app.py Neutralizer down_defense %1 %2 %3
+python app.py Neutralizer down_defense_ratio %1 %2 %3
+python app.py Neutralizer down_power %1 %2 %3
+python app.py Neutralizer down_power_ratio %1 %2 %3
+python app.py Neutralizer up_attack %1 %2 %3
+python app.py Neutralizer up_attack_on_up %1 %2 %3
+python app.py Neutralizer up_attack_ratio %1 %2 %3
+python app.py Neutralizer up_defense %1 %2 %3
+python app.py Neutralizer up_defense_ratio %1 %2 %3
+python app.py Neutralizer up_power %1 %2 %3
+python app.py Neutralizer up_power_ratio %1 %2 %3
