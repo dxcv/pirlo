@@ -747,4 +747,5 @@ class JydbSource(object):
 jydbSource = JydbSource()
 
 if __name__ == '__main__':
-    pass
+    df = jydbSource.get_tradingday('20130101', '20190115')
+    print(df)

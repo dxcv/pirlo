@@ -71,8 +71,11 @@ class LayerTestor(object):
             next_day = TradingDayService.getRelativeTradingDay(today, 1)
             factor = self.factor_data.loc[today].dropna()
             ret = self.ret.loc[next_day].dropna()
+            ret_today = self.ret.loc[today].dropna()
+
             if self.exclude_limit:
-                ret = ret[ret.abs() < 0.095]
+                ret_today = ret_today[ret_today.abs() < 0.095]
+
             tradableList_today = TradableListService.TradableListSerivce.getTradableStock(today)
             if self.exclude_ipo:
                 ipo_stock = TradableListService.TradableListSerivce.getIpoStock(TradingDayService.getRelativeTradingDay(today, -60), today)
@@ -89,7 +92,7 @@ class LayerTestor(object):
             else:
                 universe = TradableListService.TradableListSerivce.getIndexComponent(today, self.universe_code)
 
-            valid_symbol = [s for s in factor.keys() if (s in universe) and (s in ret.keys()) and (s in tradableList_today) and (s not in ipo_stock) and (s not in st_stock)]
+            valid_symbol = [s for s in factor.keys() if (s in universe) and (s in ret.keys()) and (s in ret_today.keys()) and (s in tradableList_today) and (s not in ipo_stock) and (s not in st_stock)]
 
             factor = factor[valid_symbol]
             ret = ret[valid_symbol]
