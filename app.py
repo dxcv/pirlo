@@ -3,8 +3,9 @@
 """
 Usage:
     app.py Testor <type> <factor> <factorType> <start> <end> <universe>
-    app.py TNCalculator <factor> <start> <end>
-    app.py Neutralizer <factor> <start> <end> <neutralizer>
+    app.py TNCalculator <factor> <start> <end> <logged>
+    app.py Neutralizer <factor> <start> <end> <neutralizer> <Industrized>
+    app.py Estimator <type> <factor> <factorType> <start> <end> <universe>
 
 Options:
     -h --help show this screen
@@ -12,6 +13,7 @@ Options:
 from docopt import docopt
 
 from DataService import TradableListService
+from Estimator.TurnoverRateEstimator import TurnoverRateEstimator
 from Neutralizer.SingleNeutralizer import SingleNeutralizer
 from SingleFactorTestor.LayerTestor import LayerTestor
 
@@ -26,15 +28,28 @@ from Calculator.TNDataCalculator import TNDataCalculator
 
 from SingleFactorTestor.RegressTestor import RegressTestor
 
+class Estimator(object):
+
+    def __init__(self, estimator_type, factor_name, factor_type, start, end, universe):
+        self.runner = None
+        self.initilize(estimator_type, factor_name, factor_type, start, end, universe)
+
+    def initilize(self, estimator_type, factor_name, factor_type, start, end, universe):
+        if estimator_type == 'TurnoverRate':
+            self.runner = TurnoverRateEstimator(factor_name, factor_type, start, end, universe)
+
+    def run(self):
+        self.runner.run()
+
 
 class TNCalculator(object):
 
-    def __init__(self, factor, start, end):
+    def __init__(self, factor, start, end, logged):
         self.runner = None
-        self.initialize(factor,start, end)
+        self.initialize(factor,start, end, logged)
 
-    def initialize(self, factor, start, end):
-        self.runner = TNDataCalculator(factor, start, end)
+    def initialize(self, factor, start, end, logged):
+        self.runner = TNDataCalculator(factor, start, end, logged)
 
     def run(self):
         self.runner.run()
@@ -57,12 +72,12 @@ class Testor(object):
 
 
 class Neutralizer(object):
-    def __init__(self, factor, start, end, neutralizer):
+    def __init__(self, factor, start, end, neutralizer, Industrized):
         self.runner = None
-        self.initialize(factor, start, end, neutralizer)
+        self.initialize(factor, start, end, neutralizer, Industrized)
 
-    def initialize(self, factor, start, end, neutralizer):
-        self.runner = SingleNeutralizer(factor, start, end, neutralizer)
+    def initialize(self, factor, start, end, neutralizer, Industrized):
+        self.runner = SingleNeutralizer(factor, start, end, neutralizer, Industrized)
 
     def run(self):
         self.runner.run()
@@ -70,12 +85,24 @@ class Neutralizer(object):
 
 if __name__ == '__main__':
     arg = docopt(__doc__)
+    if arg['Estimator']:
+        estimator_type = arg['<type>']
+        factor_name = arg['<factor>']
+        factor_type = arg['<factorType>']
+        start = arg['<start>']
+        end = arg['<end>']
+        universe = arg['<universe>']
+        TradableListService.TradableListSerivce.setTradingDay(start, end)
+        app = Estimator(estimator_type, factor_name, factor_type, start, end, universe)
+        app.run()
+
     if arg['TNCalculator']:
         factor = arg['<factor>']
         start = arg['<start>']
         end = arg['<end>']
+        logged = True if arg['<logged>'] == 'Log' else False
         TradableListService.TradableListSerivce.setTradingDay(start, end)
-        app = TNCalculator(factor, start, end)
+        app = TNCalculator(factor, start, end, logged)
         app.run()
 
     if arg['Testor']:
@@ -97,6 +124,7 @@ if __name__ == '__main__':
         start = arg['<start>']
         end = arg['<end>']
         neutralizer = arg['<neutralizer>']
+        Industrized = True if arg['<Industrized>'] == 'True' else False
         TradableListService.TradableListSerivce.setTradingDay(start, end)
-        app = Neutralizer(factor, start, end, neutralizer)
+        app = Neutralizer(factor, start, end, neutralizer, Industrized)
         app.run()

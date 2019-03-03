@@ -22,6 +22,7 @@ from DataService.FactorService import FactorService
 import plotly
 import plotly.graph_objs as go
 
+from DataService.IndustryFactorService import IndustryFactorService
 from DataService.TradingDayService import TradingDayService
 from DataService.TradableListService import TradableListSerivce
 
@@ -30,13 +31,14 @@ import Log
 
 class SingleNeutralizer(object):
 
-    def __init__(self, factor_name, start, end, neutralizer_name):
+    def __init__(self, factor_name, start, end, neutralizer_name, industry=False):
         self.factor_name = factor_name
         self.start = start
         self.end = end
         self.neutralizer_name = neutralizer_name
+        self.industry = industry
 
-        self.exclude_ipo = False
+        self.exclude_ipo = True
 
         self.neutralizer_data = None
         self.factor_data = None
@@ -91,13 +93,23 @@ class SingleNeutralizer(object):
 
             valid_symbol = [s for s in tradable if (s in neutralizer_data.keys()) and (s in factor.keys()) and (s not in ipo_stock)]
 
-            neutralizer_data = neutralizer_data[valid_symbol].values
-            factor_value = factor[valid_symbol].values
+            neutralizer_value = neutralizer_data[valid_symbol].values
 
+
+            if self.industry:
+                industry_data = IndustryFactorService.get_industry_factor(today)
+                valid_symbol = [s for s in valid_symbol if s in industry_data.index.values]
+
+                neutralizer_value = neutralizer_data[valid_symbol].values
+
+                industry_values = industry_data.loc[valid_symbol].values
+                neutralizer_value = np.hstack((industry_values, neutralizer_value[:, np.newaxis]))
+
+            factor_value = factor[valid_symbol].values
             if factor[valid_symbol].isna().all():
                 beta, residual, r_square_adj, t = None, None, None, None
             else:
-                beta, residual, r_square_adj, t = self.regress(factor_value, neutralizer_data)
+                beta, residual, r_square_adj, t = self.regress(factor_value, neutralizer_value)
             x = pd.Series(index=valid_symbol, data=residual, name=idx)
             self.residual = self.residual.append(x)
             self.beta.append(beta)
@@ -105,8 +117,8 @@ class SingleNeutralizer(object):
             self.t.append(t)
 
     def regress(self, y, X):
-        X = sm.add_constant(X)
-        results = sm.OLS(y, X).fit()
+        X = X if self.industry else sm.add_constant(X)
+        results = sm.OLS(y, X).fit(hasconst=False if self.industry else True)
 
         r_square_adj = results.rsquared_adj
         beta = results.params[1]
@@ -148,19 +160,22 @@ class SingleNeutralizer(object):
         fig.append_trace(trace1, 1, 2)
         fig.append_trace(trace2, 2, 1)
 
-        fig['layout'].update(title='%s-%s %s %s 中性化分析' % (self.start, self.end, self.factor_name, self.neutralizer_name))
+        fig['layout'].update(title='%s-%s %s %s 中性化分析 |t|>2 比例 %5.2f R2平均值 %5.2f%% 回归系数均值: %5.2f%%' % (self.start, self.end, self.factor_name, self.neutralizer_name, less2ratio, d['r_square_adj'].mean() * 100, d['beta'].mean() * 100))
 
-        if not os.path.exists('report\\' + self.neutralizer_name + 'Neutralized'):
-            os.mkdir('report\\' + self.neutralizer_name + 'Neutralized')
-        plotly.offline.plot(fig, filename="report\\" + self.neutralizer_name + 'Neutralized'+ "\\" + self.factor_name + ('-exclude_ipo' if self.exclude_ipo else '') + '.html', auto_open=True)
+        dir = 'report\\' + self.neutralizer_name + 'Neutralized'+ ('Industrized' if self.industry else '') + ('ExcludeIpo' if self.exclude_ipo else '')
 
-        print('|t|>2 比例 %5.2f' % less2ratio)
-        print('R2平均值 %5.2f%%' % (d['r_square_adj'].mean() * 100))
-        print('回归系数均值: %5.2f%%' % (d['beta'].mean() * 100))
+        if not os.path.exists(dir):
+            os.mkdir(dir)
+
+        plotly.offline.plot(fig, filename= dir + "\\" + self.factor_name + '.html', auto_open=True)
+
+        # print('|t|>2 比例 %5.2f' % less2ratio)
+        # print('R2平均值 %5.2f%%' % (d['r_square_adj'].mean() * 100))
+        # print('回归系数均值: %5.2f%%' % (d['beta'].mean() * 100))
 
     def store(self):
         if not self.residual.empty:
-            root = os.path.join('D:\\data\\factor', self.neutralizer_name + 'Neutralized')
+            root = os.path.join('D:\\data\\factor', self.neutralizer_name + 'Neutralized' + ('Industrized' if self.industry else '') + ('ExcludeIpo' if self.exclude_ipo else ''))
             if not os.path.exists(root):
                 os.mkdir(root)
             f = os.path.join(root, self.factor_name + '.csv')
@@ -184,5 +199,5 @@ class SingleNeutralizer(object):
 
 
 if __name__ == '__main__':
-    neutralizer = SingleNeutralizer('up_attack', '20160720', '20160731', 'Turnover')
+    neutralizer = SingleNeutralizer('up_attack', '20160720', '20160731', 'Turnover', True)
     neutralizer.run()

@@ -59,7 +59,7 @@ class TradableListSerivce(object):
             df = cls.fsource.get_index_component(tradingday, index)
             cls.index_component[tradingday] = {}
             cls.index_component[tradingday][index] = df
-        return df['Symbol'].tolist()
+        return df['Symbol'].tolist() if not df.empty else []
 
     @classmethod
     def getTradableStock(cls, tradingday):
@@ -132,4 +132,8 @@ class TradableListSerivce(object):
         return nondelisted
 
 if __name__ == '__main__':
-    pass
+    df = TradableListSerivce.getTradableStock('20150708')
+    df2 = TradableListSerivce.getIndexComponent('20150708', '000905')
+    x = [s for s in df2 if s in df]
+    # df = TradableListSerivce.getTradableStock('20140221')
+    print(len(df))

@@ -1,3 +1,14 @@
+python app.py Testor LayerTestor askQuote1Size %1 %2 %3 %4
+python app.py Testor LayerTestor askQuote10Size %1 %2 %3 %4
+python app.py Testor LayerTestor bidQuote1Size %1 %2 %3 %4
+python app.py Testor LayerTestor bidQuote10Size %1 %2 %3 %4
+python app.py Testor LayerTestor quote1Size %1 %2 %3 %4
+python app.py Testor LayerTestor quote1SizeDiff %1 %2 %3 %4
+python app.py Testor LayerTestor quote1SizeImbalance %1 %2 %3 %4
+python app.py Testor LayerTestor quote10Size %1 %2 %3 %4
+python app.py Testor LayerTestor quote10SizeDiff %1 %2 %3 %4
+python app.py Testor LayerTestor quote10SizeImbalance %1 %2 %3 %4
+
 python app.py Testor LayerTestor activebuy %1 %2 %3 %4
 python app.py Testor LayerTestor activebuy_ratio %1 %2 %3 %4
 python app.py Testor LayerTestor activesell %1 %2 %3 %4
@@ -47,6 +58,14 @@ python app.py Testor LayerTestor orderNum %1 %2 %3 %4
 python app.py Testor LayerTestor orderNumDiff %1 %2 %3 %4
 python app.py Testor LayerTestor orderNumImbalance %1 %2 %3 %4
 
+python app.py Testor LayerTestor Turnover %1 %2 %3 %4
+python app.py Testor LayerTestor Volume %1 %2 %3 %4
+
+python app.py Testor LayerTestor MarketCap %1 %2 %3 %4
+python app.py Testor LayerTestor FloatMarketCap %1 %2 %3 %4
+python app.py Testor LayerTestor Ret %1 %2 %3 %4
+python app.py Testor LayerTestor TurnoverRate %1 %2 %3 %4
+python app.py Testor LayerTestor Y1Volatility %1 %2 %3 %4
 
 python app.py Testor LayerTestor ROE %1 %2 %3 %4
 python app.py Testor LayerTestor ROA %1 %2 %3 %4
@@ -65,10 +84,10 @@ python app.py Testor LayerTestor OperatingProfitRate %1 %2 %3 %4
 python app.py Testor LayerTestor OperatingExpenseRate %1 %2 %3 %4
 
 
-rem python app.py Testor LayerTestor close_corr %1 %2 %3 %4
-rem python app.py Testor LayerTestor close_spearmancorr %1 %2 %3 %4
-rem python app.py Testor LayerTestor first_1_dtw %1 %2 %3 %4
-rem python app.py Testor LayerTestor first_1_sumsquare %1 %2 %3 %4
-rem python app.py Testor LayerTestor ret_corr %1 %2 %3 %4
-rem python app.py Testor LayerTestor ret_dtw %1 %2 %3 %4
-rem python app.py Testor LayerTestor ret_sumsquare %1 %2 %3 %4
+python app.py Testor LayerTestor close_corr %1 %2 %3 %4
+python app.py Testor LayerTestor close_spearmancorr %1 %2 %3 %4
+python app.py Testor LayerTestor first_1_dtw %1 %2 %3 %4
+python app.py Testor LayerTestor first_1_sumsquare %1 %2 %3 %4
+python app.py Testor LayerTestor ret_corr %1 %2 %3 %4
+python app.py Testor LayerTestor ret_dtw %1 %2 %3 %4
+python app.py Testor LayerTestor ret_sumsquare %1 %2 %3 %4

@@ -8,6 +8,12 @@
 @time: 2018/12/18 10:33
 """
 
+
+class TrivialStandardlizer(object):
+
+    def do(self, data):
+        return data
+
 class NormalStandardlizer(object):
 
     def do(self, data):

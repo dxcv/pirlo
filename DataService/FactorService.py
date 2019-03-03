@@ -14,7 +14,7 @@ import pandas as pd
 
 class FactorService(object):
 
-    factor_root = 'D:\\data\\factor'
+    factor_root = 'G:\\data\\factor'
     logger = Log.get_logger(__name__)
 
     def __init__(self):
@@ -37,5 +37,5 @@ class FactorService(object):
         return df
 
 if __name__ == '__main__':
-    df = FactorService.get_factor('MarketCap', '20180101', '20180110', 'mad-normal')
+    df = FactorService.get_factor('marketCap', '20180101', '20180110', 'mad-normal')
     print(df.head())

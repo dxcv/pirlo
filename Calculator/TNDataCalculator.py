@@ -14,17 +14,17 @@ import numpy as np
 import Log
 from DataService import TradableListService, TNDataService
 
-from Normalizer.Deextremer import ThreeSigmaDeextremer, MADDeextremer
-from Normalizer.Standardizator import NormalStandardlizer
+from Normalizer.Deextremer import ThreeSigmaDeextremer, MADDeextremer, TrivialDeextremer
+from Normalizer.Standardizator import NormalStandardlizer, TrivialStandardlizer
 
 
 class TNDataCalculator(object):
 
-    def __init__(self, type, start, end, deextremer='mad', standardlizer='normal'):
+    def __init__(self, type, start, end, logged, deextremer='mad', standardlizer='normal'):
         self.type = type
         self.start = start
         self.end = end
-
+        self.logged = logged
         if deextremer or standardlizer:
             self.normalized = True
         else:
@@ -42,15 +42,20 @@ class TNDataCalculator(object):
             self.deextremer = ThreeSigmaDeextremer()
         if deextremer == 'mad':
             self.deextremer = MADDeextremer()
+        if deextremer == 'trivial':
+            self.deextremer = TrivialDeextremer()
         if standardlizer == 'normal':
             self.standardizer = NormalStandardlizer()
+        if standardlizer == 'trivial':
+            self.standardizer = TrivialStandardlizer()
         self.normalizedname = ''.join([deextremer, '-', standardlizer])
 
     def run(self):
         universe = TradableListService.TradableListSerivce.getUniverse(self.end)
         # universe = ['600000.sh', '000002.sz', '300003.sz']
         df = TNDataService.TNDataSerivce.getTNData(universe, self.start, self.end, self.type)
-        if self.type == 'MarketCap' or self.type=='FloatMarketCap':
+        if self.logged:
+            df[df==0] = np.NaN
             df = np.log(df)
         if self.normalized:
             df = self.normalize(df)
@@ -64,10 +69,10 @@ class TNDataCalculator(object):
         return data
 
     def store(self, data):
-        dir = os.path.join('D:\\data\\factor', self.normalizedname)
+        dir = os.path.join('G:\\data\\factor', self.normalizedname)
         if not os.path.exists(dir):
             os.makedirs(dir)
-        file = os.path.join(dir, self.type+ '.csv')
+        file = os.path.join(dir, self.type + ('Log' if self.logged else '') + '.csv')
 
         if not os.path.exists(file):
             with open(file, 'w+') as f:

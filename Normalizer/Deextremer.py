@@ -9,6 +9,15 @@
 """
 import numpy as np
 import pandas as pd
+
+class TrivialDeextremer(object):
+
+    def __init__(self):
+        pass
+
+    def do(self, data):
+        return data
+
 class ThreeSigmaDeextremer(object):
 
     def __init__(self, n=3):

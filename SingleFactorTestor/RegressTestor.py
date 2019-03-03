@@ -8,9 +8,11 @@
 @time: 2018/12/18 19:53
 """
 import os
+import Log
 
 import statsmodels.api as sm
 import pandas as pd
+import numpy as np
 import plotly
 import plotly.graph_objs as go
 
@@ -40,12 +42,15 @@ class RegressTestor(object):
         self.factor_ret = []
         self.universe_code = universe_code
 
+        self.logger = Log.get_logger(__name__)
+
     def run(self):
         self.test()
 
     def test(self):
         self.load()
         self.compute()
+        self.store()
         self.report()
 
     def load(self):
@@ -57,8 +62,8 @@ class RegressTestor(object):
         self.factor_data = df
 
     def load_ret(self):
-        tradingDay = TradingDayService.getTradingDay(self.start, self.end)
-        end_day = TradingDayService.getRelativeTradingDay(tradingDay[-1], 1)
+        self.tradingDay = TradingDayService.getTradingDay(self.start, self.end)
+        end_day = TradingDayService.getRelativeTradingDay(self.tradingDay[-1], 1)
         universe = TradableListService.TradableListSerivce.getUniverse(end_day)
         df = TNDataService.TNDataSerivce.getTNData(universe, self.start, end_day, 'Ret')
         self.ret = df
@@ -109,12 +114,46 @@ class RegressTestor(object):
                 print('t:%s, r_square_adj:%s, factor_ret:%s' % (t, r_square_adj, factor_ret))
 
     def regress(self, y, X):
+        if X.size==0:
+            return None, None, None
+        if np.max(X) == np.min(X):
+            return None, None, None
         X = sm.add_constant(X)
         results = sm.OLS(y, X).fit()
         r_square_adj = results.rsquared_adj
         factor_ret = results.params[1]
         t = results.tvalues[1]
         return t, r_square_adj, factor_ret
+
+    def store(self):
+        root = 'D:\\data\\factorRet'
+        if not os.path.exists(root):
+            os.mkdir(root)
+        root = os.path.join(root, self.universe_code)
+        if not os.path.exists(root):
+            os.mkdir(root)
+        root = os.path.join(root, ('ExcludeLimit' if self.exclude_limit else '') + ('ExcludeSt' if self.exclude_st else '') + ('ExcludeIpo' if self.exclude_ipo else ''))
+        if not os.path.exists(root):
+            os.mkdir(root)
+        data = pd.DataFrame(data={'factor_ret': self.factor_ret, 't': self.t, 'r_square_adj': self.r_square_adj}, index=pd.to_datetime(self.tradingDay))
+        if not data.empty:
+            f = os.path.join(root, self.factor_name + '.csv')
+            if not os.path.exists(f):
+                with open(f, 'w+'):
+                    pass
+                data.to_csv(f, header=True)
+                return None
+            else:
+                try:
+                    df = pd.read_csv(f, index_col=0, parse_dates=True)
+                    d = data[~data.index.isin(df.index)]
+                    if not d.empty:
+                        df = df.append(d)
+                        df.sort_index(inplace=True)
+                    df.to_csv(f)
+                except Exception as e:
+                    self.logger.error(e)
+                    self.logger.info('%s factor_ret store wrong' % self.factor_name)
 
     def report(self):
         tradingday = TradingDayService.getTradingDay(self.start, self.end)
@@ -148,13 +187,13 @@ class RegressTestor(object):
         fig.append_trace(trace2, 2, 1)
 
 
-        fig['layout'].update(title='%s-%s %s 因子分析' % (self.start, self.end, self.factor_name))
+        fig['layout'].update(title='%s-%s %s 因子均值:%5.2f 因子分析 |t|>2 比例 %5.2f R2平均值 %5.2f%%' % (self.start, self.end, self.factor_name, d['factor_ret'].mean()*100, less2ratio, d['r_square_adj'].mean()*100))
 
         store_dir = 'report\\RegressTest\\' + self.universe_code + "\\"
         if not os.path.exists(store_dir):
             os.mkdir(store_dir)
 
-        plotly.offline.plot(fig, filename=store_dir + self.factor_name + ('-excludelimit-' if self.exclude_limit else '-') +('-excludeipo-' if self.exclude_ipo else '-') + ('-excludest-' if self.exclude_st else '-') + self.factor_type +'.html', auto_open=True)
+        plotly.offline.plot(fig, filename=store_dir + self.factor_name + ('-excludelimit-' if self.exclude_limit else '-') +('-excludeipo-' if self.exclude_ipo else '-') + ('-excludest-' if self.exclude_st else '-') + self.factor_type +'.html', auto_open=False)
 
         print('|t|>2 比例 %5.2f' % less2ratio)
         print('R2平均值 %5.2f%%' % (d['r_square_adj'].mean()*100))
@@ -162,6 +201,6 @@ class RegressTestor(object):
 
 
 if __name__ == '__main__':
-    testor = RegressTestor('Volume', 'marketCapNeutralized', '20181201', '20181231')
+    testor = RegressTestor('orderNum', 'TurnoverNeutralized', '20130101', '20130201')
 
     testor.test()

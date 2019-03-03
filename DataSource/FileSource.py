@@ -19,7 +19,19 @@ class FileSource(object):
         self.logger = Log.get_logger(__name__)
 
     def get_industry_factor(self, tradingday):
-        pass
+        industry_root = os.path.join(self.static_root, 'stock', 'DailyIndustry', 'jydb')
+        if not os.path.exists(industry_root):
+            self.logger.error('%s got industry factor wrong' % tradingday)
+            return pd.DataFrame()
+        else:
+            f = os.path.join(industry_root, tradingday + '.csv')
+            try:
+                df = pd.read_csv(f, index_col=0)
+                return df
+            except Exception as e:
+                self.logger.error(e)
+                self.logger.info('%s got industyr factor wrong' % tradingday)
+                return pd.DataFrame()
 
     def get_index_component(self, tradingday, index):
         index_root = os.path.join(self.static_root, 'index', 'indexweight', tradingday)
